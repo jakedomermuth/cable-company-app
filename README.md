@@ -3,8 +3,8 @@
 
 ## Instructions For What Is Needed
 You will build an internet/cable company’s customer tracking system. Your customer (the internet
-company) requires the following from your application:
-  • You must store the following information:
+company) requires the following from your application: <br>
+  • You must store the following information:<br>
   o Customer information, this must include the customer's name, number, and the
   locations where they have services from the company. Note, a customer can own
   multiple locations.
