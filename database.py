@@ -64,7 +64,7 @@ CREATE_BILLING_SERVICES_TABLE = """
 # Adding and Deleting customers ----------------------------------------------------------------------------------------
 INSERT_CUSTOMERS = "INSERT INTO customers (customer_name, customer_number, card_on_file) VALUES (?, ?, ?) "
 
-DELETE_CUSTOMERS = "DELETE FROM customers WHERE customer_id = ?;"
+DELETE_CUSTOMERS = "DELETE FROM customers WHERE customer_name = ?;"
 
 
 # Selecting Customer Information ---------------------------------------------------------------------------------------
@@ -113,6 +113,8 @@ UPDATE_SERVICE_COST = "UPDATE service SET service_cost = ? WHERE service = ?"
 
 UPDATE_EQUIPMENT_COST = "UPDATE equipment SET equipment_cost = ? WHERE equipment = ?"
 
+# SUPPORTING SQL
+SELECT_CUSTOMER = """SELECT * FROM customers WHERE customer_name = ?"""
 
 # PYTHON <--------------------------------------------------------------------------------------------------------------
 
@@ -136,8 +138,14 @@ def add_customers(name, number, card):
     with connection:
         connection.execute(INSERT_CUSTOMERS, (name, number, card))
 
-def delete_customers(cust_id):
+def delete_customers(cust_name):
     with connection:
-        connection.execute(DELETE_CUSTOMERS, (cust_id,))
+        connection.execute(DELETE_CUSTOMERS, (cust_name,))
+
+def customer_exist(name):
+    cursor = connection.cursor()
+    cursor.execute(SELECT_CUSTOMER, (name,))
+    return cursor.fetchall()
+
 
 
