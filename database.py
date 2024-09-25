@@ -69,14 +69,14 @@ DELETE_CUSTOMERS = "DELETE FROM customers WHERE customer_name = ?;"
 
 # Selecting Customer Information ---------------------------------------------------------------------------------------
 SELECT_BILLING_BY_NAME = """SELECT b.* FROM billing b INNER JOIN customers c ON c.customer_id = b.customer_id WHERE b.payment_date =
-    (SELECT MAX(payment_date) FROM billing b INNER JOIN customers c ON c.customer_id = b.customer_id WHERE b.customer_id = ?;)
+    (SELECT MAX(payment_date) FROM billing b INNER JOIN customers c ON c.customer_id = b.customer_id WHERE c.customer_name = ?);
 """
-# maybe take out customer_id
+
 
 SELECT_BILLING_BY_LOCATION = """SELECT b.* FROM customers c INNER JOIN location l ON c.customer_id = l.customer_id INNER JOIN billing b ON c.customer_id = b.customer_id WHERE b.payment_date = (
     SELECT MAX(b.payment_date) FROM customers c INNER JOIN location l ON c.customer_id = l.customer_id INNER JOIN billing b ON c.customer_id = b.customer_id WHERE l.location_name = ?)
 """
-# maybe take out customer_id
+
 
 SELECT_LATE_CUSTOMERS = "SELECT * FROM customers c INNER JOIN billing b ON c.customer_id = b.customer_id WHERE on_time_or_late = '1'"
 
@@ -148,4 +148,21 @@ def customer_exist(name):
     return cursor.fetchall()
 
 
+# def get_billing_by_name(name):
+#     cursor = connection.cursor()
+#     cursor.execute(SELECT_BILLING_BY_NAME, (name, ))
+#     return cursor.fetchall()
 
+def get_billing_by_name(name):
+    cursor = connection.cursor()
+    cursor.execute(SELECT_BILLING_BY_NAME, (name,))
+    result = cursor.fetchall()
+    print(f"Debug: Results for {name} - {result}")  
+    return result
+
+
+def get_billing_by_location(location):
+    cursor = connection.cursor()
+    cursor.execute(SELECT_BILLING_BY_LOCATION, (location, ))
+    return cursor.fetchall()
+    
