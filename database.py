@@ -68,13 +68,16 @@ DELETE_CUSTOMERS = "DELETE FROM customers WHERE customer_name = ?;"
 
 
 # Selecting Customer Information ---------------------------------------------------------------------------------------
-SELECT_BILLING_BY_NAME = """SELECT b.* FROM billing b INNER JOIN customers c ON c.customer_id = b.customer_id WHERE b.payment_date =
-    (SELECT MAX(payment_date) FROM billing b INNER JOIN customers c ON c.customer_id = b.customer_id WHERE c.customer_name = ?);
+SELECT_BILLING_BY_NAME = """SELECT b.* FROM billing b INNER JOIN customers c ON c.customer_id = b.customer_id WHERE c.customer_name = ?
+AND b.payment_date =(SELECT MAX(payment_date) FROM billing b INNER JOIN customers c ON c.customer_id = b.customer_id
+WHERE c.customer_name = ?);
 """
 
 
-SELECT_BILLING_BY_LOCATION = """SELECT b.* FROM customers c INNER JOIN location l ON c.customer_id = l.customer_id INNER JOIN billing b ON c.customer_id = b.customer_id WHERE b.payment_date = (
-    SELECT MAX(b.payment_date) FROM customers c INNER JOIN location l ON c.customer_id = l.customer_id INNER JOIN billing b ON c.customer_id = b.customer_id WHERE l.location_name = ?)
+SELECT_BILLING_BY_LOCATION = """SELECT b.* FROM customers c INNER JOIN location l ON c.customer_id = l.customer_id 
+INNER JOIN billing b ON c.customer_id = b.customer_id WHERE l.location_name = ? AND b.payment_date = (
+    SELECT MAX(b.payment_date) FROM customers c INNER JOIN location l ON c.customer_id = l.customer_id INNER JOIN billing b 
+    ON c.customer_id = b.customer_id WHERE l.location_name = ?)
 """
 
 
@@ -101,20 +104,25 @@ ADD_CUSTOMER_EQUIPMENT = "INSERT INTO billing_equipment_composite(billing_id, eq
 REMOVE_CUSTOMER_EQUIPMENT = "DELETE FROM billing_equipment_composite WHERE billing_id = ? and equipment_id = ?"
 
 # ADD, REMOVE, OR UPDATE SERVICES/EQUIPMENT-----------------------------------------------------------------------------
-ADD_SERVICES = "INSERT INTO services (service, service_cost) VALUES (?, ?)"
+ADD_SERVICES = "INSERT INTO services (service_name, service_cost) VALUES (?, ?)"
 
-ADD_EQUIPMENT = "INSERT INTO equipment (equipment, equipment_cost) VALUES (?, ?)"
+ADD_EQUIPMENT = "INSERT INTO equipment (equipment_name, equipment_cost) VALUES (?, ?)"
 
-REMOVE_SERVICES = "DELETE FROM services WHERE service = ?;"
+REMOVE_SERVICES = "DELETE FROM services WHERE service_name = ?;"
 
-REMOVE_EQUIPMENT = "DELETE FROM equipment WHERE equipment = ?;"
+REMOVE_EQUIPMENT = "DELETE FROM equipment WHERE equipment_name = ?;"
 
-UPDATE_SERVICE_COST = "UPDATE service SET service_cost = ? WHERE service = ?"
+UPDATE_SERVICES = "UPDATE services SET service_cost = ?, service_name = ? WHERE service_name = ?"
 
-UPDATE_EQUIPMENT_COST = "UPDATE equipment SET equipment_cost = ? WHERE equipment = ?"
+UPDATE_EQUIPMENT = "UPDATE equipment SET equipment_cost = ?, equipment_name = ? WHERE equipment_name = ?"
 
 # SUPPORTING SQL
 SELECT_CUSTOMER = """SELECT * FROM customers WHERE customer_name = ?"""
+
+SELECT_SERVICE = """SELECT * FROM services WHERE service_name = ?"""
+
+SELECT_EQUIPMENT = """SELECT * FROM equipment WHERE equipment_name = ?"""
+
 
 # PYTHON <--------------------------------------------------------------------------------------------------------------
 
@@ -142,27 +150,68 @@ def delete_customers(cust_name):
     with connection:
         connection.execute(DELETE_CUSTOMERS, (cust_name,))
 
+
 def customer_exist(name):
     cursor = connection.cursor()
     cursor.execute(SELECT_CUSTOMER, (name,))
     return cursor.fetchall()
 
 
-# def get_billing_by_name(name):
-#     cursor = connection.cursor()
-#     cursor.execute(SELECT_BILLING_BY_NAME, (name, ))
-#     return cursor.fetchall()
+def service_exist(name):
+    cursor = connection.cursor()
+    cursor.execute(SELECT_SERVICE, (name,))
+    return cursor.fetchall()
+
+
+def equipment_exist(name):
+    cursor = connection.cursor()
+    cursor.execute(SELECT_EQUIPMENT, (name,))
+    return cursor.fetchall()
+
 
 def get_billing_by_name(name):
     cursor = connection.cursor()
-    cursor.execute(SELECT_BILLING_BY_NAME, (name,))
-    result = cursor.fetchall()
-    print(f"Debug: Results for {name} - {result}")  
-    return result
+    cursor.execute(SELECT_BILLING_BY_NAME, (name, name))
+    return cursor.fetchall()
 
 
 def get_billing_by_location(location):
     cursor = connection.cursor()
-    cursor.execute(SELECT_BILLING_BY_LOCATION, (location, ))
+    cursor.execute(SELECT_BILLING_BY_LOCATION, (location, location))
     return cursor.fetchall()
-    
+
+
+def get_all_late_customers():
+    cursor = connection.cursor()
+    cursor.execute(SELECT_LATE_CUSTOMERS)
+    return cursor.fetchall()
+
+
+def add_equipment(equipment, cost):
+    with connection:
+        connection.execute(ADD_EQUIPMENT, (equipment, cost))
+
+
+def add_services(service, cost):
+    with connection:
+        connection.execute(ADD_SERVICES, (service, cost))
+
+
+def del_equipment(equipment):
+    with connection:
+        connection.execute(REMOVE_EQUIPMENT, (equipment,))
+
+
+def del_services(service):
+    with connection:
+        connection.execute(REMOVE_SERVICES, (service, ))
+
+
+def update_services(updated_name, cost, initial_name):
+    with connection:
+        connection.execute(UPDATE_SERVICES, (cost, updated_name, initial_name))
+
+
+def update_equipment(updated_name, cost, initial_name):
+    with connection:
+        connection.execute(UPDATE_EQUIPMENT, (cost, updated_name, initial_name))
