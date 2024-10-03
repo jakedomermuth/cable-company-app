@@ -86,8 +86,7 @@ INNER JOIN billing b ON c.customer_id = b.customer_id WHERE l.location_name = ? 
 
 SELECT_LATE_CUSTOMERS = """SELECT * FROM customers c INNER JOIN billing b ON c.customer_id = b.customer_id 
 WHERE on_time_or_late = '1' 
-AND STRFTIME('%Y-%m-%d', SUBSTR(payment_date, 7, 4) || '-' || SUBSTR(payment_date, 1, 2) || '-' || SUBSTR(payment_date, 4, 2)) < ?;"""
-# Come back !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+AND STRFTIME('%Y-%m-%d', SUBSTR(payment_date, 7, 4) || '-' || SUBSTR(payment_date, 1, 2) || '-' || SUBSTR(payment_date, 4, 2)) < ?;""" # formatting in SQL for speed optimization
 
 
 # Inserting and Updating Addresses
