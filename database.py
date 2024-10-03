@@ -84,7 +84,9 @@ INNER JOIN billing b ON c.customer_id = b.customer_id WHERE l.location_name = ? 
 """
 
 
-SELECT_LATE_CUSTOMERS = "SELECT * FROM customers c INNER JOIN billing b ON c.customer_id = b.customer_id WHERE on_time_or_late = '1'"
+SELECT_LATE_CUSTOMERS = """SELECT * FROM customers c INNER JOIN billing b ON c.customer_id = b.customer_id 
+WHERE on_time_or_late = '1' 
+AND STRFTIME('%Y-%m-%d', SUBSTR(payment_date, 7, 4) || '-' || SUBSTR(payment_date, 1, 2) || '-' || SUBSTR(payment_date, 4, 2)) < ?;"""
 # Come back !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
@@ -108,7 +110,9 @@ INSERT_BILLING_EQUIPMENT = """INSERT INTO billing_equipment_composite(billing_id
 INSERT_BILLING_SERVICES = """INSERT INTO billing_services_composite(billing_id, service_id)
                             VALUES( ?, ?)"""
 
-UPDATE_CUSTOMER_PAYED = "UPDATE billing SET customer_payed = 'TRUE' WHERE billing_id = ?"
+UPDATE_CUSTOMER_PAYED = "UPDATE billing SET customer_payed = 'TRUE' WHERE billing_id = ? RETURNING payment_date"
+
+UPDATE_CUSTOMER_ON_TIME = """UPDATE billing SET on_time_or_late = 0 WHERE billing_id = ?"""
 
 
 # ADD and REMOVE SERVICES FOR CUSTOMER----------------------------------------------------------------------------------
@@ -149,8 +153,9 @@ SELECT_SERVICE_WITH_ID = """SELECT * FROM services WHERE service_id = ?"""
 
 SELECT_EQUIPMENT_WITH_ID = """SELECT * FROM equipment WHERE equipment_id = ?"""
 
-SELECT_UNPAID_CUSTOMER = """SELECT * FROM customers c INNER JOIN billing b on c.customer_id = b.customer_id
-INNER JOIN location l on c.customer_id = l.customer_id WHERE customer_name = ? and customer_payed = 'FALSE'
+SELECT_UNPAID_CUSTOMER = """SELECT * FROM customers c
+INNER JOIN billing b on c.customer_id = b.customer_id
+WHERE customer_name = ?  and customer_payed = 'FALSE';
 """
 SELECT_BILLING_BY_ID = """SELECT * FROM billing where billing_id = ?"""
 
@@ -241,9 +246,9 @@ def get_billing_by_location(location):
     return cursor.fetchall()
 
 
-def get_all_late_customers():
+def get_all_late_customers(date):
     cursor = connection.cursor()
-    cursor.execute(SELECT_LATE_CUSTOMERS)
+    cursor.execute(SELECT_LATE_CUSTOMERS, (date, ))
     return cursor.fetchall()
 
 
@@ -307,11 +312,18 @@ def add_billing_equipment(billing_id, equipment_id):
 
 def update_paid_status(billing_id):
     with connection:
-        connection.execute(UPDATE_CUSTOMER_PAYED, (billing_id, ))
+        cursor = connection.cursor()
+        cursor.execute(UPDATE_CUSTOMER_PAYED, (billing_id, ))
+        payment_date = cursor.fetchone()[0]  # catching the date that was returned from the ADDING_NEW_BILLING_MONTH statement
+        return payment_date
 
 
 def lookup_unpaid_customer(name):
     cursor = connection.cursor()
     cursor.execute(SELECT_UNPAID_CUSTOMER, (name,))
     return cursor.fetchall()
-    
+
+
+def update_customer_on_time(billing_id):
+    with connection:
+        connection.execute(UPDATE_CUSTOMER_ON_TIME, (billing_id, ))
