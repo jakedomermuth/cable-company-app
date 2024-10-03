@@ -1,7 +1,7 @@
 # Cable Company APP
-- This project is still in progress.
 
-## Instructions For What Is Needed
+
+## Instructions For What Is Needed:
 You will build an internet/cable company’s customer tracking system. Your customer (the internet
 company) requires the following from your application: <br>
   • You must store the following information:<br>
@@ -29,3 +29,11 @@ company) requires the following from your application: <br>
   when service/equipment costs are changed)<br>
   • Note, a customer can have multiple locations. You can either assume they get billed per location
   or one bill combining the locations. <br>
+
+## Assumptions:
+Assumptions:
+-The user of the application is an employee, who is allowed to view all data and can get id numbers when needed
+-The user must add a billing cycle for each user every month (if a customer ends service, they just stop adding billing)
+-Services and equipment can only be added or removed at the start of a new billing cycle
+-The user will provide a proper date format (Input issues could be solved with GUI)
+-The user is trained on the system and understands the order of adding a new customer(customer information, location information, billing information, equipment/service information).
