@@ -32,8 +32,7 @@ company) requires the following from your application: <br>
 
 ## Assumptions:
 Assumptions:
--The user of the application is an employee, who is allowed to view all data and can get id numbers when needed
--The user must add a billing cycle for each user every month (if a customer ends service, they just stop adding billing)
--Services and equipment can only be added or removed at the start of a new billing cycle
--The user will provide a proper date format (Input issues could be solved with GUI)
--The user is trained on the system and understands the order of adding a new customer(customer information, location information, billing information, equipment/service information).
+-The user of the application is an employee, who is allowed to view all data and can get id numbers when needed <br>
+-The user must add a billing cycle for each user every month (if a customer ends service, they just stop adding billing) <br>
+-Services and equipment can only be added or removed at the start of a new billing cycle <br>
+-The user will provide a proper date format (Input issues could be solved with GUI) <br>
