@@ -31,7 +31,6 @@ CREATE_BILLING_TABLE = """
     customer_payed TEXT,
     FOREIGN KEY(customer_id) REFERENCES customers(customer_id));    
     """
-# NEED TO MAKE DECISION ON PAYMENT_DATE datatype
 
 CREATE_EQUIPMENT_TABLE = """
     CREATE TABLE IF NOT EXISTS equipment
