@@ -1,5 +1,8 @@
 # Cable Company APP
+Developed a comprehensive application to manage customer data, services, equipment, and billing for an internet and cable company. The system tracks multiple locations per customer, handles flat-rate billing for services and equipment, and maintains payment history, including late payments. Key functionalities include inserting and removing customers, updating services, managing equipment, and adjusting bills. The application was built with a focus on modular Python code, efficient SQL database design, and optimizing performance for queries using embedded SQL.
 
+## Skills Used: 
+Python, SQL, database design, client-server architecture, data management, and query optimization.
 
 ## Instructions For What Is Needed:
 You will build an internet/cable company’s customer tracking system. Your customer (the internet
