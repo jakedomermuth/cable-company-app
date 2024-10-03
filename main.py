@@ -3,11 +3,12 @@ from database import (create_tables, add_customers, delete_customers, customer_e
                       del_equipment, update_equipment, update_services, equipment_exist, service_exist, add_location,
                       customer_exist_by_id, location_exist, update_location, add_billing, add_billing_services,
                       add_billing_equipment, service_id_exist, equipment_id_exist, lookup_unpaid_customer,
-                      update_paid_status, billing_exist)
+                      update_paid_status, billing_exist, update_customer_on_time)
 import datetime
 
 THIRTY_DAYS_IN_SECONDS = datetime.timedelta(days=30).total_seconds()
 TODAYS_TIMESTAMP = datetime.datetime.today().timestamp()
+TODAY_DATE = datetime.date.today()
 
 INTERFACE_PROMPT = """
 Hello!
@@ -15,7 +16,7 @@ What would you like to do?
 1. View Customer Information 
 2. Add Or Remove Customers
 3. Add or Update Customer Addresses
-4. Update or Add Billing
+4. Add Billing Cycle or Update Payment Satus
 5. Add, Remove, or Update Services or Equipment
 6. Exit
 Please enter the number for your desired option:
@@ -76,6 +77,14 @@ def add_and_remove_prompt():
         del_user()
     else:
         pass
+
+
+def add_or_update_billing_cycle_prompt():
+    billing_choice = input(ADD_OR_UPDATE_BILLING)
+    if billing_choice == '1':
+        add_billing_cycle()
+    elif billing_choice == '2':
+        return_and_update_billing_cycle()
 
 
 def lookup_prompt():
@@ -150,7 +159,7 @@ def get_billing_equipment_prompt():
         try:
             # error handling for non-number input
             equip = int(equip)
-            if equipment_id_exist(equipment):  # checking if id exist to avoid foreign key error
+            if equipment_id_exist(equip):  # checking if id exist to avoid foreign key error
                 equipment.append(equip)
             else:
                 print('This id does not exist for equipment')
@@ -254,12 +263,14 @@ def get_address_to_update_prompt():
     lookup_location = input('What is the name of the location you would like to update? ')
     return lookup_location
 
+
 def get_info_to_update_prompt():
     location_name = input('What is the new name of the location? ')
     address = input('What is the new address of the location? ')
     city = input('What is the new city of the location? ')
     state = input('What is the new state of the location? ')
     return location_name, address, city, state
+
 
 def get_billing_by_id_prompt():
     while True:
@@ -318,18 +329,18 @@ def lookup_by_location():
     location = get_billing_by_location(location_name)
     if location:  # handling bad input by checking if location exist
         for col in location:  # printing out each row returned
-            print(f'Billing ID: {col[0]} Billing Amount: {col[1]} Payment Due Date: {col[2]} Name: {col[4]}')
+            print(f'Billing ID: {col[0]} Billing Amount: {col[1]} Payment Due Date: {col[2]} Customer ID: {col[4]}')
     else:
         print(f"No information can be found for {location_name}")
 
 
 # Needs to change !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 def lookup_late_customers():
-    late_customers = get_all_late_customers()
+    late_customers = get_all_late_customers(TODAY_DATE)
     if late_customers:
         for col in late_customers:
-            print(f'Customer ID: {col[0]} Customer Name: {col[1]} Billing ID: {col[4]} Billing Amount: {col[5]} '
-                  f'Payment Due Date: {col[6]} User ID: {col[8]}')
+            print(f'Customer ID: {col[0]}  | Customer Name: {col[1]}  | Billing ID: {col[4]} | Billing Amount: {col[5]} | '
+                  f'Payment Due Date: {col[6]} \n')
     else:
         print("All Customers are up to date!")
 
@@ -431,9 +442,59 @@ def update_location_func():
 
 
 def time_conversion(database_date):
-    date_object = datetime.datetime.strptime(database_date, "%m-%d-%Y")
+    date_object = datetime.datetime.strptime(database_date, "%m-%d-%Y")  # converts db time format to seconds
     payment_timestamp = date_object.timestamp()
     return payment_timestamp
+
+
+def add_billing_cycle():
+    billing_amount, payment_date, billing_cust_id = get_billing_info_prompt()
+    billing_id = add_billing(billing_amount, payment_date, billing_cust_id)  # inserting new billing cycle
+    print('Billing information has been added')
+    add_services_to_billing(billing_id)
+    add_equipment_to_billing(billing_id)
+
+
+def add_services_to_billing(billing_id):
+    add_services_choice = user_adding_entity('Services')
+    if add_services_choice == 'Y':
+        added_services = get_billing_services_prompt()  # returns a list of equipment
+        for service in added_services:
+            add_billing_services(billing_id, service)  # adding to composite table
+        print('Services have been added')
+
+
+def add_equipment_to_billing(billing_id):
+    add_equipment_choice = user_adding_entity('Equipment')
+    if add_equipment_choice == 'Y':
+        added_equipment = get_billing_equipment_prompt()  # returns a list of equipment
+        for equip in added_equipment:
+            add_billing_equipment(billing_id, equip)  # adding to composite table
+        print('Equipment has been added')
+
+
+def update_billing_cycle():
+    billing_update_id = get_billing_by_id_prompt()
+    if billing_exist(billing_update_id):  # checking if the billing id exist
+        updated_bill_date = update_paid_status(billing_update_id)  # updating to paid
+        print(f'Billing cycle {billing_update_id} has been paid')
+        updated_bill_date = time_conversion(updated_bill_date)  # converting date to seconds
+        if updated_bill_date > TODAYS_TIMESTAMP:  # checking if payment was paid before the due date
+            update_customer_on_time(billing_update_id)  # updating database to "On Time"
+    else:
+        print('This billing cycle does not exist')
+
+
+def return_and_update_billing_cycle():
+    customer_name = get_name_prompt()
+    if customer_exist(customer_name):  # making sure customer exists
+        billing_rows = lookup_unpaid_customer(customer_name)
+        print(f'All unpaid billing cycles for {customer_name}:')
+        for row in billing_rows:  # giving all billing cycles for provided name back to user
+            print(f'Name: {row[1]:<10} | Billing Number: {row[4]:<5} | Billing Amount: {row[5]:<8} | Payment Date: {row[6]}')
+        update_billing_cycle() # cals function that updates if customer exist
+    else:
+        print(f'{customer_name} does not exist in the database')
 
 # Main------------------------------------------------------------------------------------------------------------------
 
@@ -447,41 +508,7 @@ def main():
         elif user_choice == '3':
             add_or_update_prompt()
         elif user_choice == '4':
-            billing_choice = input(ADD_OR_UPDATE_BILLING)
-            if billing_choice == '1':
-                billing_amount, payment_date, billing_cust_id = get_billing_info_prompt()
-                billing_id = add_billing(billing_amount, payment_date, billing_cust_id)
-                print('Billing information has been added')
-                add_services_choice = user_adding_entity('Services')
-                if add_services_choice == 'Y':
-                    added_services = get_billing_services_prompt()
-                    for service in added_services:
-                        service = int(service)
-                        add_billing_services(billing_id, service)
-                    print('Services have been added')
-                add_equipment_choice = user_adding_entity('Equipment')
-                if add_equipment_choice == 'Y':
-                    added_equipment = get_billing_equipment_prompt()
-                    for equip in added_equipment:
-                        equip = int(equip)
-                        add_billing_equipment(billing_id, equip)
-                    print('Equipment has been added')
-            elif billing_choice == '2':
-                customer_name = get_name_prompt()
-                if customer_exist(customer_name): # making sure customer exists
-                    billing_rows = lookup_unpaid_customer(customer_name)
-                    print(f'All unpaid billing cycles for {customer_name}:')
-                    for row in billing_rows: # giving all billing cycles for provided name back to user
-                        print(f'Name: {row[1]:<10} | Location: {row[11]:<15} | Billing Number: {row[4]:<5} | Billing Amount: {row[5]:<8} | Payment Date: {row[6]}')
-                    billing_update_id = get_billing_by_id_prompt()
-                    if billing_exist(billing_update_id):  # checking if the billing id exist
-                        update_paid_status(billing_update_id)  # updating to paid
-                        print(f'Billing cycle {billing_update_id} has been paid')
-                        if #---------------------------------------------------------------------------------------------
-                    else:
-                        print('This billing cycle does not exist')
-                else:
-                    print(f'{customer_name} does not exist in the database')
+            add_or_update_billing_cycle_prompt()
         elif user_choice == '5':
             add_del_or_update_prompt()
         else:
