@@ -31,7 +31,6 @@ company) requires the following from your application: <br>
   or one bill combining the locations. <br>
 
 ## Assumptions:
-Assumptions:
 -The user of the application is an employee, who is allowed to view all data and can get id numbers when needed <br>
 -The user must add a billing cycle for each user every month (if a customer ends service, they just stop adding billing) <br>
 -Services and equipment can only be added or removed at the start of a new billing cycle <br>
