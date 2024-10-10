@@ -18,7 +18,7 @@ CREATE_LOCATION_TABLE = """
     location_city TEXT, 
     location_state TEXT,
     customer_id INTEGER,
-    FOREIGN KEY(customer_id) REFERENCES customers(customer_id));
+    FOREIGN KEY(customer_id) REFERENCES customers(customer_id) ON DELETE CASCADE);
     """
 
 CREATE_BILLING_TABLE = """
@@ -29,7 +29,7 @@ CREATE_BILLING_TABLE = """
     on_time_or_late TEXT,
     customer_id INTEGER,
     customer_payed TEXT,
-    FOREIGN KEY(customer_id) REFERENCES customers(customer_id));    
+    FOREIGN KEY(customer_id) REFERENCES customers(customer_id) ON DELETE CASCADE);    
     """
 
 CREATE_EQUIPMENT_TABLE = """
@@ -50,16 +50,16 @@ CREATE_BILLING_EQUIPMENT_TABLE = """
     CREATE TABLE IF NOT EXISTS billing_equipment_composite
     (billing_id INTEGER,
     equipment_id INTEGER,
-    FOREIGN KEY(billing_id) REFERENCES billing(billing_id),
-    FOREIGN KEY(equipment_id) REFERENCES equipment(equipment_id))
+    FOREIGN KEY(billing_id) REFERENCES billing(billing_id) ON DELETE CASCADE,
+    FOREIGN KEY(equipment_id) REFERENCES equipment(equipment_id) ON DELETE CASCADE)
     """
 
 CREATE_BILLING_SERVICES_TABLE = """
     CREATE TABLE IF NOT EXISTS billing_services_composite
     (billing_id INTEGER,
     service_id INTEGER,
-    FOREIGN KEY(billing_id) REFERENCES billing(billing_id),
-    FOREIGN KEY(service_id) REFERENCES services(service_id))
+    FOREIGN KEY(billing_id) REFERENCES billing(billing_id) ON DELETE CASCADE,
+    FOREIGN KEY(service_id) REFERENCES services(service_id) ON DELETE CASCADE)
     """
 
 
@@ -84,8 +84,7 @@ INNER JOIN billing b ON c.customer_id = b.customer_id WHERE l.location_name = ? 
 
 
 SELECT_LATE_CUSTOMERS = """SELECT * FROM customers c INNER JOIN billing b ON c.customer_id = b.customer_id 
-WHERE on_time_or_late = '1' 
-AND STRFTIME('%Y-%m-%d', SUBSTR(payment_date, 7, 4) || '-' || SUBSTR(payment_date, 1, 2) || '-' || SUBSTR(payment_date, 4, 2)) < ?;""" # formatting in SQL for speed optimization
+WHERE on_time_or_late = '1' AND payment_date < ?"""
 
 
 # Inserting and Updating Addresses
