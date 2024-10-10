@@ -125,44 +125,38 @@ def add_or_update_prompt():
 
 def get_billing_info_prompt():
     amount = input('How much does the billing cost for this month? ')
-    payment_date = input('What date is the payment due? (MM-DD-YYYY) ')
+    payment_date = input('What date is the payment due? (YYYY-MM-DD) ')
     customer_id = input('What is the customers ID number? ')
     return amount, payment_date, customer_id
 
 
 def get_billing_services_prompt():
-    # getting an id number and adding it to a list
+    # Getting an id number and adding it to a list
     services = []
-    while True:
-        service = input("Enter each service ID: (type 'exit' to finish) ")
-        if service.lower() == 'exit':
-            break
+    while (service := input("Enter each service ID: (type 'exit' to finish) ")).lower() != 'exit':
         try:
-            # error handling for non-number input
-            service = int(service)
-            if service_id_exist(service):  # checking if id exist to avoid foreign key error
-                services.append(service)
+            # Error handling for non-number input
+            service_id = int(service)
+            if service_id_exist(service_id):  # Checking if id exists to avoid foreign key error
+                services.append(service_id)
             else:
-                print('This id does not exist for a service')
+                print('This id does not exist for a service.')
         except ValueError:
             print("Invalid input. Please enter a valid service ID (an integer) or type 'exit' to finish.")
     return services
 
 
 def get_billing_equipment_prompt():
-    # getting an id number and adding it to a list
+    # Getting an id number and adding it to a list
     equipment = []
-    while True:
-        equip = input("Enter each equipment ID: (type 'exit' to finish) ")
-        if equip.lower() == 'exit':
-            break
+    while (equip := input("Enter each equipment ID: (type 'exit' to finish) ")).lower() != 'exit':
         try:
-            # error handling for non-number input
-            equip = int(equip)
-            if equipment_id_exist(equip):  # checking if id exist to avoid foreign key error
-                equipment.append(equip)
+            # Error handling for non-number input
+            equip_id = int(equip)
+            if equipment_id_exist(equip_id):  # Checking if id exists to avoid foreign key error
+                equipment.append(equip_id)
             else:
-                print('This id does not exist for equipment')
+                print('This id does not exist for equipment.')
         except ValueError:
             print("Invalid input. Please enter a valid equipment ID (an integer) or type 'exit' to finish.")
     return equipment
@@ -319,7 +313,7 @@ def lookup_by_name():
     customer_info = get_billing_by_name(lookup_name)
     if customer_info:  # handling bad input by checking if user exist
         for col in customer_info:  # printing out each row returned
-            print(f'Billing ID: {col[0]} Billing Amount: {col[1]} Payment Due Date: {col[2]} User ID: {col[4]}')
+            print(f'Billing ID: {col[0]} | Billing Amount: {col[1]} | Payment Due Date: {col[2]} | Payed: {col[5]} | Customer ID: {col[4]}')
     else:
         print(f"No information can be found for {lookup_name}")
 
@@ -329,18 +323,18 @@ def lookup_by_location():
     location = get_billing_by_location(location_name)
     if location:  # handling bad input by checking if location exist
         for col in location:  # printing out each row returned
-            print(f'Billing ID: {col[0]} Billing Amount: {col[1]} Payment Due Date: {col[2]} Customer ID: {col[4]}')
+            print(f'Billing ID: {col[0]} | Billing Amount: {col[1]} | Payment Due Date: {col[2]} | Payed: {col[5]} | Customer ID: {col[4]}')
     else:
         print(f"No information can be found for {location_name}")
 
 
-# Needs to change !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 def lookup_late_customers():
     late_customers = get_all_late_customers(TODAY_DATE)
     if late_customers:
         for col in late_customers:
             print(f'Customer ID: {col[0]}  | Customer Name: {col[1]}  | Billing ID: {col[4]} | Billing Amount: {col[5]} | '
-                  f'Payment Due Date: {col[6]} \n')
+                  f'Payment Due Date: {col[6]} | Payed: {col[9]} \n')
     else:
         print("All Customers are up to date!")
 
@@ -442,7 +436,7 @@ def update_location_func():
 
 
 def time_conversion(database_date):
-    date_object = datetime.datetime.strptime(database_date, "%m-%d-%Y")  # converts db time format to seconds
+    date_object = datetime.datetime.strptime(database_date, "%Y-%m-%d")  # converts db time format to seconds
     payment_timestamp = date_object.timestamp()
     return payment_timestamp
 
